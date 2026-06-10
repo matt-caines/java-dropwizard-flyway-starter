@@ -3,6 +3,8 @@ name: Flyway Migration
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   migrate:
@@ -15,7 +17,7 @@ jobs:
         with:
           args: >-
             -locations=filesystem:/github/workspace/migrations
-            -url=jdbc:mysql://${{ secrets.DB_HOST }}/${{ secrets.DB_NAME }}
+            -url=jdbc:mysql://${{ secrets.DB_HOST }}/${{ secrets.DB_NAME }}?allowPublicKeyRetrieval=true&useSSL=false
             -user=${{ secrets.DB_USERNAME }}
             -password=${{ secrets.DB_PASSWORD }}
             -baselineOnMigrate=true
