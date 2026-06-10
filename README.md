@@ -110,3 +110,61 @@ After a merge to `main`, the GitHub Actions workflow runs Flyway against the con
 - Put SQL access behind DAOs so it stays isolated and testable.
 - Add new migrations instead of editing old ones after they have been applied.
 - Keep configuration in `config.yml` and secrets in `.env` or deployment secrets.
+
+## Local MySQL with Docker Quickstart
+
+Use this if you want a quick local MySQL instance that matches the sample `.env` values.
+
+Run these commands step by step. Each includes why it is needed.
+
+1. Remove existing container (optional but recommended):
+
+```bash
+docker rm -f academy-mysql
+```
+
+Why: avoids naming conflicts and ensures you start from a clean MySQL container.
+
+1. Start MySQL in Docker:
+
+```bash
+docker run -d --name academy-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=mysql mysql:8.4
+```
+
+Why: creates the local database service your app connects to.
+
+2. Create your local env file:
+
+```bash
+cp .env.example .env
+```
+
+Why: keeps local secrets/config separate from committed files.
+
+3. Ensure your `.env` contains:
+
+```text
+DB_USERNAME=root
+DB_PASSWORD=password
+DB_HOST=127.0.0.1
+DB_NAME=mysql
+```
+
+Why: these values match the Docker container credentials and DB name from the command above.
+
+4. Install dependencies and start the app:
+
+```bash
+npm install
+npm run dev
+```
+
+Why: installs required packages, then boots the API so you can test endpoints locally.
+
+5. Optional check if MySQL is running:
+
+```bash
+docker ps --filter name=academy-mysql
+```
+
+Why: confirms the container is up before troubleshooting app connection issues.
