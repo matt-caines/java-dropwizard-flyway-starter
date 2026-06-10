@@ -6,15 +6,86 @@ It includes:
 
 - an Express API written in TypeScript
 - a simple controller -> service -> DAO structure
-- MySQL connectivity through `mysql2`
+- PostgreSQL connectivity through `pg`
 - Swagger UI for local API exploration
 - Flyway migrations for schema changes
 
 ## What it does today
 
-- `GET /api/test` connects to MySQL and returns the list of visible databases
+- `GET /api/test` connects to PostgreSQL and returns the list of accessible databases
 - `GET /healthcheck` runs on the admin port for a lightweight health check
 - `GET /swagger` serves the OpenAPI docs in the browser
+
+## Prerequisites
+
+- Node.js 20 or later
+- Docker
+
+## Local PostgreSQL with Docker Quickstart
+
+Use this if you want a quick local PostgreSQL instance that matches the sample `.env` values.
+
+Run these commands step by step. Each includes why it is needed.
+
+1. Remove existing container (optional but recommended):
+
+```bash
+docker rm -f academy-postgres
+```
+
+Why: avoids naming conflicts and ensures you start from a clean PostgreSQL container.
+
+2. Start PostgreSQL in Docker:
+
+```bash
+docker run -d --name academy-postgres -p 5432:5432 -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=password -e POSTGRES_DB=academy_dev postgres:17-alpine
+```
+
+Why: creates the local database service your app connects to.
+
+3. Create your local env file:
+
+```bash
+cp .env.example .env
+```
+
+Why: keeps local secrets/config separate from committed files.
+
+4. Ensure your `.env` contains:
+
+```text
+DB_USERNAME=postgres
+DB_PASSWORD=password
+DB_HOST=127.0.0.1
+DB_NAME=academy_dev
+```
+
+Why: these values match the Docker container credentials and DB name from the command above.
+
+5. Run migrations now:
+
+```bash
+docker run --rm -v "$PWD/migrations:/flyway/sql" flyway/flyway:11.9.1 -locations=filesystem:/flyway/sql -url="jdbc:postgresql://host.docker.internal/academy_dev" -user=postgres -password=password -baselineOnMigrate=true migrate
+```
+
+Why: applies SQL files in `migrations` to your local PostgreSQL before the app runs.
+
+6. Optional check if PostgreSQL is running:
+
+```bash
+docker ps --filter name=academy-postgres
+```
+
+Why: confirms the container is up before troubleshooting app connection issues.
+
+7. Verify the migration was applied correctly:
+
+```bash
+docker exec academy-postgres psql -U postgres -d academy_dev -c "SELECT * FROM flyway_schema_history;"
+docker exec academy-postgres psql -U postgres -d academy_dev -c "SELECT * FROM flyway_smoke_test;"
+```
+
+Why: the first command shows Flyway's migration history - look for `success = t` against `V1__create_flyway_smoke_table.sql`. The second confirms the smoke test table was created and the seed row (`flyway smoke test migration applied`) is present.
 
 ## Quick start
 
@@ -25,7 +96,7 @@ It includes:
 npm install
 ```
 
-3. Copy `.env.example` to `.env` and fill in your database details.
+3. Configure `.env` with your database details (or run the Docker quickstart above).
 4. Start the service in development mode:
 
 ```bash
@@ -79,7 +150,7 @@ src/
 3. Set the following environment variables:
 
 ```bash
-export FLYWAY_URL="jdbc:mysql://YOUR_DB_HOST/YOUR_DB_NAME"
+export FLYWAY_URL="jdbc:postgresql://YOUR_DB_HOST/YOUR_DB_NAME"
 export FLYWAY_USER="YOUR_DB_USERNAME"
 export FLYWAY_PASSWORD="YOUR_DB_PASSWORD"
 export FLYWAY_BASELINE_ON_MIGRATE=true
@@ -110,69 +181,3 @@ After a merge to `main`, the GitHub Actions workflow runs Flyway against the con
 - Put SQL access behind DAOs so it stays isolated and testable.
 - Add new migrations instead of editing old ones after they have been applied.
 - Keep configuration in `config.yml` and secrets in `.env` or deployment secrets.
-
-## Local MySQL with Docker Quickstart
-
-Use this if you want a quick local MySQL instance that matches the sample `.env` values.
-
-Run these commands step by step. Each includes why it is needed.
-
-1. Remove existing container (optional but recommended):
-
-```bash
-docker rm -f academy-mysql
-```
-
-Why: avoids naming conflicts and ensures you start from a clean MySQL container.
-
-2. Start MySQL in Docker:
-
-```bash
-docker run -d --name academy-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=mysql mysql:8.4
-```
-
-Why: creates the local database service your app connects to.
-
-3. Create your local env file:
-
-```bash
-cp .env.example .env
-```
-
-Why: keeps local secrets/config separate from committed files.
-
-4. Ensure your `.env` contains:
-
-```text
-DB_USERNAME=root
-DB_PASSWORD=password
-DB_HOST=127.0.0.1
-DB_NAME=mysql
-```
-
-Why: these values match the Docker container credentials and DB name from the command above.
-
-5. Run migrations now:
-
-```bash
-docker run --rm -v "$PWD/migrations:/flyway/sql" flyway/flyway:11.9.1 -locations=filesystem:/flyway/sql -url="jdbc:mysql://host.docker.internal/mysql?allowPublicKeyRetrieval=true&useSSL=false" -user=root -password=password -baselineOnMigrate=true migrate
-```
-
-Why: applies SQL files in `migrations` to your local MySQL before the app runs.
-
-6. Install dependencies and start the app:
-
-```bash
-npm install
-npm run dev
-```
-
-Why: installs required packages, then boots the API so you can test endpoints locally.
-
-7. Optional check if MySQL is running:
-
-```bash
-docker ps --filter name=academy-mysql
-```
-
-Why: confirms the container is up before troubleshooting app connection issues.

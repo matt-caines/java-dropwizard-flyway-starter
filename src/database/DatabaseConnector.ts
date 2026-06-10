@@ -1,4 +1,4 @@
-import mysql, { type Pool } from "mysql2/promise";
+import { Pool } from "pg";
 import { loadDatabaseConfig } from "../config.js";
 
 let pool: Pool | undefined;
@@ -9,14 +9,12 @@ export function getPool(): Pool {
   }
 
   const databaseConfig = loadDatabaseConfig();
-  pool = mysql.createPool({
+  pool = new Pool({
     host: databaseConfig.host,
     user: databaseConfig.username,
     password: databaseConfig.password,
     database: databaseConfig.name,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    max: 10
   });
 
   return pool;
