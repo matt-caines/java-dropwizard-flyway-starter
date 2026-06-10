@@ -125,7 +125,7 @@ docker rm -f academy-mysql
 
 Why: avoids naming conflicts and ensures you start from a clean MySQL container.
 
-1. Start MySQL in Docker:
+2. Start MySQL in Docker:
 
 ```bash
 docker run -d --name academy-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=mysql mysql:8.4
@@ -133,7 +133,7 @@ docker run -d --name academy-mysql -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password 
 
 Why: creates the local database service your app connects to.
 
-2. Create your local env file:
+3. Create your local env file:
 
 ```bash
 cp .env.example .env
@@ -141,7 +141,7 @@ cp .env.example .env
 
 Why: keeps local secrets/config separate from committed files.
 
-3. Ensure your `.env` contains:
+4. Ensure your `.env` contains:
 
 ```text
 DB_USERNAME=root
@@ -152,7 +152,15 @@ DB_NAME=mysql
 
 Why: these values match the Docker container credentials and DB name from the command above.
 
-4. Install dependencies and start the app:
+5. Run migrations now:
+
+```bash
+docker run --rm -v "$PWD/migrations:/flyway/sql" flyway/flyway:11.9.1 -locations=filesystem:/flyway/sql -url="jdbc:mysql://host.docker.internal/mysql?allowPublicKeyRetrieval=true&useSSL=false" -user=root -password=password -baselineOnMigrate=true migrate
+```
+
+Why: applies SQL files in `migrations` to your local MySQL before the app runs.
+
+6. Install dependencies and start the app:
 
 ```bash
 npm install
@@ -161,7 +169,7 @@ npm run dev
 
 Why: installs required packages, then boots the API so you can test endpoints locally.
 
-5. Optional check if MySQL is running:
+7. Optional check if MySQL is running:
 
 ```bash
 docker ps --filter name=academy-mysql
