@@ -1,8 +1,8 @@
----
-logging:
-  level: INFO
-  loggers:
-    org.example: DEBUG
+server:
+  applicationPort: 8080
+  adminPort: 8081
 
 swagger:
-  resourcePackage: "org.example.controllers"
+  title: "Academy Starter API"
+  version: "1.0.0"
+  path: "/swagger"

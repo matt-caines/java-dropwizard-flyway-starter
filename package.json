@@ -1,0 +1,32 @@
+{
+  "name": "typescript-express-flyway-starter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TypeScript starter service with MySQL access, Swagger docs, and Flyway migrations.",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "js-yaml": "^4.1.0",
+    "pg": "^8.11.3",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.3",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^24.0.1",
+    "@types/pg": "^8.11.5",
+    "@types/swagger-ui-express": "^4.1.8",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
