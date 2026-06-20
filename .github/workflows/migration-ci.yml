@@ -1,0 +1,39 @@
+name: Migration CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: academy_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run migrations against CI database
+        uses: docker://flyway/flyway:11.9.1
+        with:
+          args: >-
+            -locations=filesystem:/github/workspace/migrations
+            -url=jdbc:postgresql://localhost/academy_ci
+            -user=postgres
+            -password=password
+            -baselineOnMigrate=true
+            migrate
