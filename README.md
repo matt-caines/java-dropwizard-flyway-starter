@@ -162,7 +162,7 @@ export FLYWAY_BASELINE_ON_MIGRATE=true
 flyway -locations=filesystem:./migrations migrate
 ```
 
-### Production
+### Production 
 
 Add these GitHub repository secrets:
 

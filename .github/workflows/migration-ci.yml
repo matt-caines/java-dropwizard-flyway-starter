@@ -32,7 +32,7 @@ jobs:
         with:
           args: >-
             -locations=filesystem:/github/workspace/migrations
-            -url=jdbc:postgresql://localhost/academy_ci
+            -url=jdbc:postgresql://postgres:5432/academy_ci
             -user=postgres
             -password=password
             -baselineOnMigrate=true
