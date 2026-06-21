@@ -2,7 +2,7 @@
   "name": "typescript-express-flyway-starter",
   "version": "1.0.0",
   "private": true,
-  "description": "TypeScript starter service with MySQL access, Swagger docs, and Flyway migrations.",
+  "description": "TypeScript starter service with PostgreSQL access, Swagger docs, and Flyway migrations.",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",

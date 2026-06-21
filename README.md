@@ -173,11 +173,11 @@ DB_HOST
 DB_NAME
 ```
 
-After a merge to `main`, the GitHub Actions workflow runs Flyway against the configured production database.
+The production migration workflow (`migration.yml`) is currently manual trigger only (`workflow_dispatch`). Re-enable the `push` trigger for `main` when you want automatic migration runs.
 
 ## Deploying to Azure
 
-The `deploy.yml` workflow builds and deploys to **Azure App Service** automatically on every push to `main`. The `migration.yml` workflow runs Flyway against the target database on the same trigger. Set everything up once and both run together.
+The `deploy.yml` and `migration.yml` workflows are currently manual trigger only (`workflow_dispatch`) while the academy is in progress. This avoids failed production deployment runs before Azure is ready.
 
 ### 1. Create Azure resources
 
@@ -271,7 +271,7 @@ The live app will be at `https://<YOUR_APP_NAME>.azurewebsites.net`.
 
 - The admin healthcheck port (8081) is not available on Azure App Service. The `/healthcheck` endpoint is only reachable locally. Use Azure's built-in health check feature under **Monitoring → Health check** if you need liveness checks in production.
 - The `config.yml` file is included in the deployment and controls port and Swagger settings.
-- Migrations run after every push to `main` using the Flyway Docker image — add new `.sql` files to `migrations/` and never edit applied ones.
+- Production migrations run when `migration.yml` is triggered. After you re-enable `push` for `main`, they will run automatically on each push.
 
 ## Notes for academy work
 
