@@ -4,7 +4,8 @@ coverage/
 .env
 
 ### VS Code ###
-.vscode/
+.vscode/*
+!.vscode/launch.json
 
 ### Mac OS ###
 .DS_Store
