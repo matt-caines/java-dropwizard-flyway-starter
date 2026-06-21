@@ -175,6 +175,104 @@ DB_NAME
 
 After a merge to `main`, the GitHub Actions workflow runs Flyway against the configured production database.
 
+## Deploying to Azure
+
+The `deploy.yml` workflow builds and deploys to **Azure App Service** automatically on every push to `main`. The `migration.yml` workflow runs Flyway against the target database on the same trigger. Set everything up once and both run together.
+
+### 1. Create Azure resources
+
+Run these commands in Azure CLI (or use the portal):
+
+```bash
+az group create --name academy-rg --location uksouth
+
+az appservice plan create \
+  --name academy-plan \
+  --resource-group academy-rg \
+  --sku B1 \
+  --is-linux
+
+az webapp create \
+  --name <YOUR_APP_NAME> \
+  --resource-group academy-rg \
+  --plan academy-plan \
+  --runtime "NODE:20-lts"
+```
+
+Replace `<YOUR_APP_NAME>` with a globally unique name — this becomes `<YOUR_APP_NAME>.azurewebsites.net`.
+
+### 2. Configure App Settings in Azure
+
+The app listens on port 8080. Tell Azure which port to expect, and provide the database connection values:
+
+```bash
+az webapp config appsettings set \
+  --name <YOUR_APP_NAME> \
+  --resource-group academy-rg \
+  --settings \
+    WEBSITES_PORT=8080 \
+    DB_HOST=<your-db-host> \
+    DB_NAME=<your-db-name> \
+    DB_USERNAME=<your-db-username> \
+    DB_PASSWORD=<your-db-password>
+```
+
+### 3. Download the publish profile
+
+In the Azure portal, open your Web App → **Overview** → **Download publish profile**. Keep this file — you will paste its contents into a GitHub secret.
+
+Alternatively with CLI:
+
+```bash
+az webapp deployment list-publishing-profiles \
+  --name <YOUR_APP_NAME> \
+  --resource-group academy-rg \
+  --xml
+```
+
+### 4. Add GitHub secrets
+
+In the GitHub repository go to **Settings → Secrets and variables → Actions** and add:
+
+| Secret | Value |
+|---|---|
+| `AZURE_WEBAPP_NAME` | The Web App name you chose |
+| `AZURE_WEBAPP_PUBLISH_PROFILE` | Full XML contents of the publish profile |
+| `DB_HOST` | Your PostgreSQL host |
+| `DB_NAME` | Your database name |
+| `DB_USERNAME` | Your database username |
+| `DB_PASSWORD` | Your database password |
+
+The last four are shared by both the deploy and migration workflows.
+
+### 5. Trigger the workflows
+
+Both `deploy.yml` and `migration.yml` are set to **manual trigger only** (`workflow_dispatch`). This means they will not run automatically while students are committing to `main` — useful during the academy period before Azure is set up.
+
+To run them manually, go to the GitHub repository → **Actions** → select the workflow → **Run workflow**.
+
+**When Azure is ready and you want automatic runs on every push to `main`**, update the `on:` block in both workflow files:
+
+```yaml
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+```
+
+After that change, every push to `main` will:
+
+1. Run `migration.yml` — applies any pending Flyway migrations against the target database.
+2. Run `deploy.yml` — builds the TypeScript and deploys the app to Azure.
+
+The live app will be at `https://<YOUR_APP_NAME>.azurewebsites.net`.
+
+### Notes
+
+- The admin healthcheck port (8081) is not available on Azure App Service. The `/healthcheck` endpoint is only reachable locally. Use Azure's built-in health check feature under **Monitoring → Health check** if you need liveness checks in production.
+- The `config.yml` file is included in the deployment and controls port and Swagger settings.
+- Migrations run after every push to `main` using the Flyway Docker image — add new `.sql` files to `migrations/` and never edit applied ones.
+
 ## Notes for academy work
 
 - Keep controller logic thin and move decision-making into services.
